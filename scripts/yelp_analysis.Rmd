@@ -1,0 +1,196 @@
+---
+title: "Yelp"
+author: "Ria Pinjani"
+date: "11/17/2019"
+output: pdf_document
+---
+
+```{r}
+# install.packages('jsonlite')
+# setwd("~/Desktop/Year 1/Messy Data and Machine Learning/Final Project")
+library(jsonlite)
+```
+
+1,637,138 users
+
+```
+{
+    // string, 22 character unique user id, maps to the user in user.json
+    "user_id": "Ha3iJu77CxlrFm-vQRs_8g",
+    // string, the user's first name
+    "name": "Sebastien",
+    // integer, the number of reviews they've written
+    "review_count": 56,
+    // string, when the user joined Yelp, formatted like YYYY-MM-DD
+    "yelping_since": "2011-01-01",
+    // array of strings, an array of the user's friend as user_ids
+    "friends": [
+        "wqoXYLWmpkEH0YvTmHBsJQ",
+        "KUXLLiJGrjtSsapmxmpvTA",
+        "6e9rJKQC3n0RSKyHLViL-Q"
+    ],
+    // integer, number of useful votes sent by the user
+    "useful": 21,
+    // integer, number of funny votes sent by the user
+    "funny": 88,
+    // integer, number of cool votes sent by the user
+    "cool": 15,
+    // integer, number of fans the user has
+    "fans": 1032,
+    // array of integers, the years the user was elite
+    "elite": [
+        2012,
+        2013
+    ],
+    // float, average rating of all reviews
+    "average_stars": 4.31,
+    // integer, number of hot compliments received by the user
+    "compliment_hot": 339,
+    // integer, number of more compliments received by the user
+    "compliment_more": 668,
+    // integer, number of profile compliments received by the user
+    "compliment_profile": 42,
+    // integer, number of cute compliments received by the user
+    "compliment_cute": 62,
+    // integer, number of list compliments received by the user
+    "compliment_list": 37,
+    // integer, number of note compliments received by the user
+    "compliment_note": 356,
+    // integer, number of plain compliments received by the user
+    "compliment_plain": 68,
+    // integer, number of cool compliments received by the user
+    "compliment_cool": 91,
+    // integer, number of funny compliments received by the user
+    "compliment_funny": 99,
+    // integer, number of writer compliments received by the user
+    "compliment_writer": 95,
+    // integer, number of photo compliments received by the user
+    "compliment_photos": 50
+}
+```
+
+
+```{r}
+setwd("~/Desktop/Year 1/Messy Data and Machine Learning/Final Project")
+
+user = stream_in(file('data/user.json')) 
+user = data.frame(user)
+
+checkin = stream_in(file('data/checkin.json')) 
+checkin = data.frame(checkin)
+
+review = stream_in(file('data/review.json')) 
+review = data.frame(review)
+
+tip = stream_in(file('data/tip.json'))
+tip = data.frame(tip)
+
+business = stream_in(file('data/business.json')) 
+business = data.frame(business)
+```
+
+```{r}
+inner_join(user, review, by = 'user_id')
+restaurant <- business[c(grep('Restaurant',business$name),grep('restaurant',business$name)),]
+restaurant_user_review <- inner_join(restaurant,user_review, by= "business_id")
+```
+
+```{r}
+restaurant <- business[c(grep("Restaurant",business$categories), grep("Restaurants",business$categories)),]
+```
+
+
+
+````{r}
+require(stringr)
+rest_dict = c("Restaurant", "Food", "Drink", "Drinks","Restaurants", "Smoothies", "Coffee", "Cafe")
+c = str_count(business$categories, pattern = rest_dict)
+sum(c>0, na.rm = T)
+```
+
+
+```{r}
+review_business <- merge(review, restaurant[, c("business_id", "review_count", "stars", "city", "state", "address")], by = "business_id", all = T)
+
+
+```
+
+```{r}
+length(unique(user$user_id))
+```
+
+```{r}
+length(unique(user$name)) 
+```
+
+```{r}
+summary(user.data$review_count)
+length(user.data$review_count[user.data$review_count < 100])
+1564188/1637138
+# 95.5% of data has a review count (the number of reviews they've written) less than 100
+hist(user.data$review_count[user.data$review_count < 100])
+```
+
+
+```{r}
+head(user.data$yelping_since)
+```
+
+
+```{r}
+library(lubridate)
+user.data$yelping_since <-  as_datetime(user.data$yelping_since)
+head(user.data$yelping_since)
+```
+
+
+
+```{r}
+library(tidyverse)
+user.data  <-  user.data %>% mutate(yelping_since_year = year(user.data$yelping_since))
+head(user.data$yelping_since_year)
+```
+
+
+
+```{r}
+table(user.data$yelping_since_year)
+```
+
+```{r}
+summary(user.data$average_stars)
+```
+
+```{r}
+
+```
+
+```{r}
+ggplot(user.data, aes(group  = yelping_since_year, y = average_stars)) + geom_boxplot()
+```
+
+```{r}
+require(readr)
+restaurant = read_csv('data/restaurant.csv')
+
+```
+
+```{r}
+require(lubridate)
+# Randomly choose 1000 rstaurants
+samp <- sample(nrow(restaurant),1000)
+restaurant_data = restaurant[samp,]
+
+id = unique(restaurant_data$business_id)
+review_chosen <- review[review$business_id %in% id,]
+
+# Filter for only most recent 4 years of reviews
+review_dat = review_chosen %>% filter(year(date) %in% c(2015, 2016, 2017, 2018))
+user_id = unique(review_dat$user_id)
+user_chosen <- user[user$user_id %in% user_id,]
+
+# Merge User information with Review information
+review_final = merge(review_dat, user_chosen[, c("user_id", "review_count", "yelping_since", "average_stars", "elite", "fans", "average_stars")], by = "user_id", all = T)
+
+final = merge(review_final, restaurant_data[, c("business_id", "name", "city", "state", "stars")], by = "business_id", all = T)
+```
