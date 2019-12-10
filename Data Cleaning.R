@@ -2,10 +2,6 @@
 ########### Data Exploration ##############
 ###########################################
 
-
-
-
-
 #Install required packages 
 # install.packages('jsonlite')
 require(jsonlite)
@@ -21,12 +17,10 @@ review = data.frame(review)
 # business = stream_in(file('data/business.json')) 
 business = data.frame(business)
 
-
 # Subset business data for only businesses that contain the word
 # restaurant in the column categories
 restaurant <- business[c(grep("Restaurant",business$categories), 
                          grep("Restaurants",business$categories)),]
-
 
 # Randomly choose 1000 restaurants
 samp <- sample(nrow(restaurant),1000)
@@ -35,10 +29,8 @@ restaurant_data = restaurant[samp,]
 # write dataset to csv file
 write_csv(restaurant_data,'data/restaurant_data.csv')
 
-
 # Read in the saved csv file
 restaurant_data = read_csv('data/restaurant_data.csv')
-
 
 # Select rows from the dataset reviews for which business id 
 # matches those in restaraunt_data
@@ -67,7 +59,6 @@ review_final <- read_csv('data/review_final.csv')
 
 # Merge user & review merged file above file with restaurant data (subset of dataset business) by business id
 final = merge(review_final, restaurant_data[, c("business_id", "name", "city", "state", "stars")], by = "business_id", all = T)
-
 
 # write dataset to csv file
 write_csv(final,'data/final.csv')
