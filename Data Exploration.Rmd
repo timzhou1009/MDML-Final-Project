@@ -23,7 +23,7 @@ mean(final$review_count.y)
 ```
 
 ```{r}
-final <- final %>% mutate(review_count.x = review_count.business )
+final <- final %>% mutate(review_count.x = review_count.business  %>% select(-review_count.x)
 ```
 
 
