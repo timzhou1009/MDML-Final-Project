@@ -4,3 +4,30 @@ author: "Ria Pinjani, Christina Ho, Tim Chou"
 date: "12/10/2019"
 output: html_document
 ---
+
+```{r}
+length(unique(final$business_id))
+```
+
+```{r}
+range(final$date)
+```
+
+
+```{r}
+mean(final$review_count.x)
+```
+
+```{r}
+mean(final$review_count.y)
+```
+
+```{r}
+final <- final %>% mutate(review_count.x = review_count.business )
+```
+
+
+
+
+
+

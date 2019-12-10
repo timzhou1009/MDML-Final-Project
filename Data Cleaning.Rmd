@@ -1,6 +1,6 @@
 ---
-title: "Yelp"
-author: "Ria Pinjani"
+title: "Data Cleaning"
+author: "Ria Pinjani, Christina Ho, Tim Chou"
 date: "11/17/2019"
 output: pdf_document
 ---
@@ -283,7 +283,10 @@ final = merge(review_final, restaurant_data[, c("business_id", "name", "city", "
 
 Read in the saved csv file
 
+
+
 ```{r}
+review_final <- read_csv('data/review_final.csv')
 final <- read_csv('data/final.csv')
 ```
 
