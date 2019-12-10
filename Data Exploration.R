@@ -1,10 +1,16 @@
+# Christina Ho, Tim Chou, Ria Pinjani #####
+########### Data Exploration ##############
+###########################################
 
-length(unique(final$business_id))
+# Packages
+require(readr)
+require(tidyverse)
 
+# Reading in final joined csv
+dat = read_csv('data/final.csv')
+# length(unique(dat$business_id))
+# range(dat$date)
 
+dat <- dat %>% rename(review.count.business = review_count.x) %>% 
+                            select(-c(X1, X1_1))
 
-range(final$date)
-
-
-final <- final %>% mutate(review_count.x = review_count.business)  %>% 
-                            select(-review_count.x)
