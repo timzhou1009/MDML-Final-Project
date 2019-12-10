@@ -1,0 +1,6 @@
+---
+title: "Data Exploration"
+author: "Ria Pinjani, Christina Ho, Tim Chou"
+date: "12/10/2019"
+output: html_document
+---
