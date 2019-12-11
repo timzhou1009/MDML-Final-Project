@@ -23,6 +23,8 @@ dat <- dat %>% rename(review.count.business = review_count.x,
                       user.star = stars.y) %>% 
   select(-c(X1, X1_1, average_stars.1))
 
+write_csv(dat, 'data/dat_clean')
+
 # Inspecting NAs
 
 # NA_values <- is.na(dat)
@@ -183,6 +185,8 @@ ggplot(words_afinn, aes(reviews, average_stars, color = value)) +
   ylab("Average Yelp Business Stars")
 
 # http://varianceexplained.org/r/yelp-sentiment/
+
+
 # https://github.com/mjfii/Yelp-Value-Bias-Analysis
 
 
