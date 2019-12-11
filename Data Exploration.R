@@ -11,6 +11,5 @@ dat = read_csv('data/final.csv')
 # length(unique(dat$business_id))
 # range(dat$date)
 
-dat <- dat %>% rename(review.count.business = review_count.x) %>% 
-                            select(-c(X1, X1_1))
+
 
