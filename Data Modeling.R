@@ -89,12 +89,45 @@ feature_matrix1 <- as_tibble(cbind(unique(business_words$business_id),feature_ma
 # 2. Feature Engineering I; Part of Speech analysis per sentence, use these results to select top k frequent words
 
 # 3. Feature Engineering II; after finishing Part of Speech; extract adjectives only and pick top k adjectives
+review_sentence <- dat %>%
+  select(review_id, business_id, business.star, text) %>%
+  unnest_tokens(sentence, text, token = "sentences")
+
+install.packages("openNLPmodels.en", repos = "http://datacube.wu.ac.at/", type = "source")
+install.packages("opneNLP")
+library(NLP)
+library(tm)  # make sure to load this prior to openNLP
+library(openNLP)
+library(openNLPmodels.en)
+
+<<<<<<< HEAD
+# Models - 
+  
+# 1 Linear Regression
+=======
+baby_string0 = barth0 %>% 
+  filter(id=='baby.txt')
+>>>>>>> d1ce632d7503f332d3d97b5b76f0de54dbed13a6
+
+review_string = unlist(dat$text) %>% 
+  paste(collapse=' ') %>% 
+  as.String
+
+init_s_w = annotate(review_string, list(Maxent_Sent_Token_Annotator(),
+                                        Maxent_Word_Token_Annotator()))
+
+pos_res = annotate(review_string, Maxent_POS_Tag_Annotator(), init_s_w)
+word_subset = subset(pos_res, type=='word')
+tags = sapply(word_subset$features , '[[', "POS")
+
+baby_pos = data_frame(word=review_string[word_subset], pos=tags) %>% 
+  filter(!str_detect(pos, pattern='[[:punct:]]'))
 
 # For all 3 feature matrixes, test different values of k and choose the one with the lowest RMSE
 
 
 # Models - 
-  
+
 # 1 Linear Regression
 
 dat <- dat %>% rename(review.count.business = review_count.x,
@@ -121,7 +154,6 @@ test <- test %>% select(-business_id, - business.star)
 
 mod_lr <- lm(business.star ~ ., data = train)
 pred_lr <- predict(mod_lr, test)
-
 
 
 # 2 Support Vector Regression
