@@ -23,7 +23,7 @@ dat <- dat %>% rename(review.count.business = review_count.x,
                       user.star = stars.y) %>% 
   select(-c(X1, X1_1, average_stars.1))
 
-write_csv(dat, 'data/dat_clean')
+write_csv(dat, 'data/dat_clean.csv')
 
 # Inspecting NAs
 
@@ -195,6 +195,4 @@ ggplot(words_afinn, aes(reviews, average_stars, color = value)) +
 #https://nativeatom.github.io/document/Yelp.pdf
 
 # https://github.com/AmiGandhi/Yelp-User-Rating-Prediction-using-NLP-and-Naive-Bayes-algorithm-and-Restaurant-Recommender
-
-
 
