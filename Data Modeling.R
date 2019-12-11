@@ -97,6 +97,31 @@ feature_matrix1 <- as_tibble(cbind(unique(business_words$business_id),feature_ma
 
 # 1 Linear Regression
 
+dat <- dat %>% rename(review.count.business = review_count.x,
+                      review.count.user = review_count.y,
+                      business.star = stars.x,
+                      user.star = stars.y) %>% 
+  select(-c(X1, X1_1, average_stars.1))
+
+feature_matrix1 <- feature_matrix1 %>% rename(business_id  = V1)
+
+model_data <- left_join(feature_matrix1, dat[,c('business.star', 'business_id')], by = 'business_id') %>% 
+  distinct()
+
+
+smp_size <- floor(0.90 * nrow(model_data))
+
+train_ind <- sample(seq_len(nrow(model_data)), size = smp_size)
+
+train <- model_data[train_ind, ]
+train <- train %>% select(-business_id)
+
+test <- model_data[-train_ind, ]
+test <- test %>% select(-business_id, - business.star)
+
+mod_lr <- lm(business.star ~ ., data = train)
+pred_lr <- predict(mod_lr, test)
+
 
 
 # 2 Support Vector Regression
