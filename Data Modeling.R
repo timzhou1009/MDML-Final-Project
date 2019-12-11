@@ -2,9 +2,14 @@
 ########### Data Modeling ##############
 ###########################################
 
+dat = read_csv('data/final.csv')
+
+
 # Install required packages
 library(tidytext)
 library(tidyverse)
+require(tm)
+
 
 # General guidelines for all models
 
@@ -28,16 +33,22 @@ library(tidyverse)
 
 # Feature Selection
 
+# Remove numbers from text
+dat$text <- removeNumbers(dat$text)
 
 #  Create bag of words from text column
-
-text_dat <- dat %>% select(text, review_id, business_id) %>% unnest_tokens(word, text)
+text_dat <- dat %>% select(text, review_id, business_id)  %>% unnest_tokens(word, text) 
 
 # Remove stop words
-
 data(stop_words)
 text_dat <- text_dat %>% anti_join(stop_words)
 
+
+
+
+
+
+# Remove words not in english
 
 
 
@@ -60,7 +71,7 @@ business_words <- left_join(business_words, total_words)
 
 
 # filter business_words to only keep words that belong to top k 
-business_words <-  business_words %>% filter(word %in% text_dat_top_k$word)
+business_words <-  business_words %>% filter(word %in% text_dat_top_k$word) %>% arrange(business_id)
 
 
 # 1. Baseline; divide the number of occurence with the total number of occurence for all the top k words
@@ -68,8 +79,12 @@ business_words <-  business_words %>% filter(word %in% text_dat_top_k$word)
 # Resulting training matrix should be size N (number of restaurants) x k 
 
 feature_matrix1 <- business_words %>% group_by(business_id, word) %>% 
-  mutate(prop_top_k = n/total) %>% select(business_id, prop_top_k) %>% distinct() %>% arrange(business_id)
+  mutate(prop_top_k = n/total) %>% select(business_id, prop_top_k) %>% distinct() 
 
+feature_matrix1 <- feature_matrix1 %>% cast_dtm(document = business_id, term = word, value = prop_top_k)
+
+feature_matrix1 <- as.matrix(feature_matrix1)
+feature_matrix1 <- as_tibble(cbind(unique(business_words$business_id),feature_matrix1))
 
 # 2. Feature Engineering I; Part of Speech analysis per sentence, use these results to select top k frequent words
 
@@ -81,6 +96,9 @@ feature_matrix1 <- business_words %>% group_by(business_id, word) %>%
 # Models - 
 
 # 1 Linear Regression
+
+
+
 # 2 Support Vector Regression
 # 3 Support Vector Regression with normalized features
 # 4 Decision Tree Regression
