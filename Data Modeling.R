@@ -89,6 +89,33 @@ feature_matrix1 <- as_tibble(cbind(unique(business_words$business_id),feature_ma
 # 2. Feature Engineering I; Part of Speech analysis per sentence, use these results to select top k frequent words
 
 # 3. Feature Engineering II; after finishing Part of Speech; extract adjectives only and pick top k adjectives
+review_sentence <- dat %>%
+  select(review_id, business_id, business.star, text) %>%
+  unnest_tokens(sentence, text, token = "sentences")
+
+install.packages("openNLPmodels.en", repos = "http://datacube.wu.ac.at/", type = "source")
+install.packages("opneNLP")
+library(NLP)
+library(tm)  # make sure to load this prior to openNLP
+library(openNLP)
+library(openNLPmodels.en)
+
+baby_string0 = barth0 %>% 
+  filter(id=='baby.txt')
+
+review_string = unlist(dat$text) %>% 
+  paste(collapse=' ') %>% 
+  as.String
+
+init_s_w = annotate(review_string, list(Maxent_Sent_Token_Annotator(),
+                                        Maxent_Word_Token_Annotator()))
+
+pos_res = annotate(review_string, Maxent_POS_Tag_Annotator(), init_s_w)
+word_subset = subset(pos_res, type=='word')
+tags = sapply(word_subset$features , '[[', "POS")
+
+baby_pos = data_frame(word=review_string[word_subset], pos=tags) %>% 
+  filter(!str_detect(pos, pattern='[[:punct:]]'))
 
 # For all 3 feature matrixes, test different values of k and choose the one with the lowest RMSE
 
@@ -96,31 +123,6 @@ feature_matrix1 <- as_tibble(cbind(unique(business_words$business_id),feature_ma
 # Models - 
 
 # 1 Linear Regression
-
-dat <- dat %>% rename(review.count.business = review_count.x,
-                      review.count.user = review_count.y,
-                      business.star = stars.x,
-                      user.star = stars.y) %>% 
-  select(-c(X1, X1_1, average_stars.1))
-
-feature_matrix1 <- feature_matrix1 %>% rename(business_id  = V1)
-
-model_data <- left_join(feature_matrix1, dat[,c('business.star', 'business_id')], by = 'business_id') %>% 
-  distinct()
-
-
-smp_size <- floor(0.90 * nrow(model_data))
-
-train_ind <- sample(seq_len(nrow(model_data)), size = smp_size)
-
-train <- model_data[train_ind, ]
-train <- train %>% select(-business_id)
-
-test <- model_data[-train_ind, ]
-test <- test %>% select(-business_id, - business.star)
-
-mod_lr <- lm(business.star ~ ., data = train)
-pred_lr <- predict(mod_lr, test)
 
 
 
