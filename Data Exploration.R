@@ -1,6 +1,6 @@
-# Christina Ho, Tim Chou, Ria Pinjani #####
-########### Data Exploration ##############
-###########################################
+##### Christina Ho, Tim Chou, Ria Pinjani #####
+########### Data Exploration ##################
+###############################################
 
 # Packages
 require(readr)
@@ -43,9 +43,6 @@ top_cities <- dat %>%
   summarize(n=n()) %>% 
   arrange(desc(n)) %>% 
   head(12) 
-
-top_cities$longitude <- rep(0,length(top_cities$city))
-top_cities$latitude <- rep(0,length(top_cities$city))
 
 map1 <- leaflet(top_cities) %>% 
   addTiles() %>% setView(lng = -96.503906, lat = 38.68551, zoom = 4) %>%addCircleMarkers(lng = ~longitude, lat = ~latitude, weight = 0, radius=~n/1000+10, fillOpacity = 0.4 , color="Magenta" , popup = ~city) 
