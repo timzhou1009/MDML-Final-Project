@@ -21,7 +21,7 @@ dat <- dat %>% rename(review.count.business = review_count.x,
                       review.count.user = review_count.y,
                       business.star = stars.x,
                       user.star = stars.y) %>% 
-  select(-c(X1, X1_1))
+  select(-c(X1, X1_1, average_stars.1))
 
 # Inspecting NAs
 
@@ -112,14 +112,79 @@ review_words <- dat %>%
   filter(!word %in% stop_words$word,
          str_detect(word, "^[a-z']+$")) # removed “stopwords” 
 
-review_words
+review_sentiment = review_words %>% 
+  inner_join(get_sentiments("afinn"), by = 'word') %>% 
+  group_by(review_id, business.star) %>%
+  summarize(sentiment = mean(value))
 
-AFINN <- get_sentiments("afinn") %>%
-  filter(lexicon == "AFINN") %>%
-  select(word, afinn_score = score)
+ggplot(review_sentiment, aes(business.star, sentiment, group = business.star)) +
+  geom_boxplot() + ylab("Average Sentiment Score")
+# Confirms that the higher the store, more positive the words used in sentiment analysis.
+
+### Which words are positive or negative?
+review_words_counted <- review_words %>%
+  count(review_id, business_id, business.star, word) %>%
+  ungroup()
+
+word_summaries <- review_words_counted %>%
+  group_by(word) %>%
+  summarize(businesses = n_distinct(business_id),
+            reviews = n(),
+            uses = sum(n),
+            average_stars = mean(business.star)) %>%
+  ungroup()
+
+# Look at words that appear in at least 200 reviews. Rare words have noisier measurem,ent (few good or bad reviews could shift balance). They are less likely be useful in classifying reviews or text.
+# Filtering also for ones that appear in at least 10 other businesses
+word_summaries_filtered <- word_summaries %>%
+  filter(reviews >= 200, businesses >= 10)
+
+word_summaries_filtered
+
+# What were the most positive words?
+word_summaries_filtered %>%
+  arrange(desc(average_stars))
+
+# Negative words?
+
+word_summaries_filtered %>%
+  arrange(average_stars)
+
+# Plot by Frequency
+ggplot(word_summaries_filtered, aes(reviews, average_stars)) +
+  geom_point(size = 0.05) +
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1, hjust = 1) +
+  scale_x_log10() +
+  xlab("# of reviews") +
+  ylab("Average Stars")
+
+# Food is neutral word
+### Comparing to sentiment Analysis
+words_afinn <- word_summaries_filtered %>%
+  inner_join(get_sentiments('afinn'))
+
+ggplot(words_afinn, aes(value, average_stars, group = value)) +
+  geom_boxplot() +
+  xlab("AFINN score of word") +
+  ylab("Average stars of reviews with this word")
+
+ggplot(words_afinn, aes(value, average_stars)) +
+  geom_point(size = 0.05) +
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1, hjust = 1, size=2) +
+  scale_x_log10() +
+  xlab("AFINN Sentiment Score") +
+  ylab("Average Yelp Business Stars")
+
+ggplot(words_afinn, aes(reviews, average_stars, color = value)) +
+  geom_point(size = 0.05) +
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1, hjust = 1,size=2) +
+  scale_x_log10() +
+  xlab("Number of Reviews") +
+  ylab("Average Yelp Business Stars")
+
 # http://varianceexplained.org/r/yelp-sentiment/
 # https://github.com/mjfii/Yelp-Value-Bias-Analysis
-AFINN
+
 
 
 # https://github.com/Yelp-Kaggle/Yelp
