@@ -94,7 +94,7 @@ feature_matrix1 <- as_tibble(cbind(unique(business_words$business_id),feature_ma
 
 
 # Models - 
-
+  
 # 1 Linear Regression
 
 dat <- dat %>% rename(review.count.business = review_count.x,
