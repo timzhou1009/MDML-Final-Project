@@ -1,16 +1,18 @@
 # Christina Ho, Tim Chou, Ria Pinjani #####
 ########### Data Modeling ##############
 ###########################################
+# Install required packages
+require(tidytext)
+require(tidyverse)
+require(tm)
 
 dat = read_csv('data/final.csv')
 
-
-# Install required packages
-library(tidytext)
-library(tidyverse)
-require(tm)
-
-
+dat <- dat %>% rename(review.count.business = review_count.x,
+                      review.count.user = review_count.y,
+                      business.star = stars.x,
+                      user.star = stars.y) %>% 
+  select(-c(X1, X1_1, average_stars.1))
 # General guidelines for all models
 
 # Split cleaned data into 90% training and 10% testing using 10 fold cross validation
@@ -28,10 +30,7 @@ require(tm)
 
 # accuracy <- 
 
-
-
-
-# Feature Selection
+#### Feature Selection
 
 # Remove numbers from text
 dat$text <- removeNumbers(dat$text)
@@ -43,36 +42,26 @@ text_dat <- dat %>% select(text, review_id, business_id)  %>% unnest_tokens(word
 data(stop_words)
 text_dat <- text_dat %>% anti_join(stop_words)
 
-
-
-
-
-
 # Remove words not in english
 
+### Pick top k frequent words, calculate frequency of each top k word
 
-
-#  pick top k frequent words, calculate frequency of each top k word
-
-# count the 50 most frequent words to view
+# 1000 most frequent words to view
 text_dat_top_k <- text_dat %>% count(word) %>% arrange(desc(n)) %>% slice(1:1000)
 
-# count each word by business id and sort in descending order
+# Most common words by business id 
 business_words <- text_dat %>% count(word, business_id, sort = T)
 
-
+# Top Word Occurence by Restaurant and Total
 # group business_words by business id and create column for total # of words in each business_id
 total_words <- business_words %>% 
   group_by(business_id) %>% 
   summarize(total = sum(n))
 
-# join business_words and total_words 
 business_words <- left_join(business_words, total_words)
-
 
 # filter business_words to only keep words that belong to top k 
 business_words <-  business_words %>% filter(word %in% text_dat_top_k$word) %>% arrange(business_id)
-
 
 # 1. Baseline; divide the number of occurence with the total number of occurence for all the top k words
 
@@ -130,11 +119,7 @@ baby_pos = data_frame(word=review_string[word_subset], pos=tags) %>%
 
 # 1 Linear Regression
 
-dat <- dat %>% rename(review.count.business = review_count.x,
-                      review.count.user = review_count.y,
-                      business.star = stars.x,
-                      user.star = stars.y) %>% 
-  select(-c(X1, X1_1, average_stars.1))
+
 
 feature_matrix1 <- feature_matrix1 %>% rename(business_id  = V1)
 
