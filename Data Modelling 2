@@ -1,0 +1,174 @@
+# Christina Ho, Tim Chou, Ria Pinjani #####
+########### Data Modeling ##############
+###########################################
+# Install required packages
+require(tidytext)
+require(tidyverse)
+require(tm)
+require(readr)
+
+dat = read_csv('data/dat_clean.csv')
+
+# General guidelines for all models
+
+# Split cleaned data into 90% training and 10% testing using 10 fold cross validation
+
+# train <- 
+# test <- 
+
+# train %>% select(text, stars.business)
+
+# use test to predict business rating
+
+# predictions <- 
+
+# compare predicted and actual ratings
+
+# accuracy <- 
+
+#### Feature Selection
+
+# Remove numbers from text
+dat$text <- removeNumbers(dat$text)
+
+#  Create bag of words from text column
+text_dat <- dat %>% select(text, review_id, business_id)  %>% unnest_tokens(word, text) 
+
+# Remove stop words
+data(stop_words)
+text_dat <- text_dat %>% anti_join(stop_words)
+
+# Remove words not in english
+
+### Pick top k frequent words, calculate frequency of each top k word
+
+# 1000 most frequent words to view
+text_dat_top_k <- text_dat %>% count(word) %>% arrange(desc(n)) %>% slice(1:1000)
+
+# Most common words by business id 
+business_words <- text_dat %>% count(word, business_id, sort = T)
+
+# Top Word Occurence by Restaurant and Total
+# group business_words by business id and create column for total # of words in each business_id
+total_words <- business_words %>% 
+  group_by(business_id) %>% 
+  summarize(total = sum(n))
+
+business_words <- left_join(business_words, total_words)
+
+# filter business_words to only keep words that belong to top k 
+business_words <-  business_words %>% filter(word %in% text_dat_top_k$word) %>% arrange(business_id)
+
+# 1. Baseline; divide the number of occurence with the total number of occurence for all the top k words
+
+# Resulting training matrix should be size N (number of restaurants) x k 
+
+feature_matrix1 <- business_words %>% group_by(business_id, word) %>% 
+  mutate(prop_top_k = n/total) %>% select(business_id, prop_top_k) %>% distinct() 
+
+feature_matrix1 <- feature_matrix1 %>% cast_dtm(document = business_id, term = word, value = prop_top_k)
+
+# feature_matrix1 <- as.matrix(feature_matrix1)
+# feature_matrix1 <- as_tibble(cbind(unique(business_words$business_id),feature_matrix1))
+
+# 2. Feature Engineering I; Part of Speech analysis per sentence, use these results to select top k frequent words
+
+# text in sentence
+review_sentence <- dat %>%
+  select(review_id, business_id, business.star, text) %>%
+  unnest_tokens(sentence, text, token = "sentences")
+
+# text as a whole
+review_string = unlist(dat$text) %>% 
+  paste(collapse=' ') %>% 
+  as.String
+
+# POS 
+review_pos = text_dat %>% 
+  group_by(word) %>%                                # get words
+  inner_join(parts_of_speech) %>%                   # join POS
+  count(pos) %>%                                    # count
+  mutate(prop=n/sum(n))
+
+text_adj <-review_pos[c(review_pos$pos=='Adjective'),]
+text_adv <-review_pos[c(review_pos$pos=='Adverb'),]
+
+install.packages("openNLPmodels.en", repos = "http://datacube.wu.ac.at/", type = "source")
+install.packages("opneNLP")
+
+library(NLP)
+library(tm)  # make sure to load this prior to openNLP
+library(openNLP)
+library(openNLPmodels.en)
+
+init_s_w = annotate(review_string, list(Maxent_Sent_Token_Annotator(),
+                                        Maxent_Word_Token_Annotator()))
+
+pos_res = annotate(review_string, Maxent_POS_Tag_Annotator(), init_s_w)
+word_subset = subset(pos_res, type=='word')
+tags = sapply(word_subset$features , '[[', "POS")
+
+review_pos = data_frame(word=review_string[word_subset], pos=tags) %>% 
+  filter(!str_detect(pos, pattern='[[:punct:]]'))
+
+install.packages("rJava")
+install.packages("data.table")
+install.packages("RDRPOSTagger", repos = "http://www.datatailor.be/rcube", type = "source")
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load_gh(c(
+  "trinker/termco", 
+  "trinker/coreNLPsetup",        
+  "trinker/tagger"
+))
+library(tagger)
+tag_pos(review_sentence) %>%
+  c()
+
+# 3. Feature Engineering II; after finishing Part of Speech; extract adjectives only and pick top k adjectives
+
+# For all 3 feature matrixes, test different values of k and choose the one with the lowest RMSE
+
+
+# Models - 
+
+# 1 Linear Regression
+
+
+
+# feature_matrix1 <- feature_matrix1 %>% rename(business_id  = V1)
+
+# model_data <- left_join(feature_matrix1, dat[,c('business.star', 'business_id')], by = 'business_id') %>% 
+#  distinct()
+
+
+smp_size <- floor(0.90 * nrow(model_data))
+
+train_ind <- sample(seq_len(nrow(model_data)), size = smp_size)
+
+train <- feature_matrix1[train_ind, ]
+labels <- dat %>% arrange(business_id) %>% select(business_id, business.star) %>% distinct() %>% select(business.star)
+train_labels <- labels[train_ind,]
+train <- train %>% as.matrix() %>% as.tibble() %>%  mutate(y = train_labels$business.star)
+
+
+test <-  feature_matrix1[-train_ind, ] %>% as.matrix() %>% as.tibble()
+test_labels <- labels[-train_ind,]
+
+
+
+
+require(quanteda)
+
+lr_model <- lm(y ~ ., data = train)
+pred_lr <- predict(lr_model, test, type = "response")
+
+Metrics::accuracy(test_labels, pred_lr)
+
+
+# 2 Support Vector Regression
+
+
+
+# 3 Support Vector Regression with normalized features
+# 4 Decision Tree Regression
