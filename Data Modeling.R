@@ -76,20 +76,17 @@ feature_matrix1 <- feature_matrix1 %>% cast_dtm(document = business_id, term = w
 # feature_matrix1 <- as_tibble(cbind(unique(business_words$business_id),feature_matrix1))
 
 # 2. Feature Engineering I; Part of Speech analysis per sentence, use these results to select top k frequent words
-
-# 3. Feature Engineering II; after finishing Part of Speech; extract adjectives only and pick top k adjectives
 review_sentence <- dat %>%
   select(review_id, business_id, business.star, text) %>%
   unnest_tokens(sentence, text, token = "sentences")
 
 install.packages("openNLPmodels.en", repos = "http://datacube.wu.ac.at/", type = "source")
 install.packages("opneNLP")
+
 library(NLP)
 library(tm)  # make sure to load this prior to openNLP
 library(openNLP)
 library(openNLPmodels.en)
-
-
 
 review_string = unlist(dat$text) %>% 
   paste(collapse=' ') %>% 
@@ -102,14 +99,30 @@ pos_res = annotate(review_string, Maxent_POS_Tag_Annotator(), init_s_w)
 word_subset = subset(pos_res, type=='word')
 tags = sapply(word_subset$features , '[[', "POS")
 
-baby_pos = data_frame(word=review_string[word_subset], pos=tags) %>% 
+review_pos = data_frame(word=review_string[word_subset], pos=tags) %>% 
   filter(!str_detect(pos, pattern='[[:punct:]]'))
+
+install.packages("rJava")
+install.packages("data.table")
+install.packages("RDRPOSTagger", repos = "http://www.datatailor.be/rcube", type = "source")
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load_gh(c(
+  "trinker/termco", 
+  "trinker/coreNLPsetup",        
+  "trinker/tagger"
+))
+library(tagger)
+tag_pos(review_sentence) %>%
+  c()
+
+# 3. Feature Engineering II; after finishing Part of Speech; extract adjectives only and pick top k adjectives
 
 # For all 3 feature matrixes, test different values of k and choose the one with the lowest RMSE
 
 
 # Models - 
- 
+
 # 1 Linear Regression
 
 
@@ -117,7 +130,7 @@ baby_pos = data_frame(word=review_string[word_subset], pos=tags) %>%
 # feature_matrix1 <- feature_matrix1 %>% rename(business_id  = V1)
 
 # model_data <- left_join(feature_matrix1, dat[,c('business.star', 'business_id')], by = 'business_id') %>% 
- #  distinct()
+#  distinct()
 
 
 smp_size <- floor(0.90 * nrow(model_data))
@@ -150,19 +163,3 @@ Metrics::accuracy(test_labels, pred_lr)
 
 # 3 Support Vector Regression with normalized features
 # 4 Decision Tree Regression
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
