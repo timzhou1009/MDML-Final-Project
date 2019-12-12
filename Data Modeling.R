@@ -72,8 +72,8 @@ feature_matrix1 <- business_words %>% group_by(business_id, word) %>%
 
 feature_matrix1 <- feature_matrix1 %>% cast_dtm(document = business_id, term = word, value = prop_top_k)
 
-feature_matrix1 <- as.matrix(feature_matrix1)
-feature_matrix1 <- as_tibble(cbind(unique(business_words$business_id),feature_matrix1))
+# feature_matrix1 <- as.matrix(feature_matrix1)
+# feature_matrix1 <- as_tibble(cbind(unique(business_words$business_id),feature_matrix1))
 
 # 2. Feature Engineering I; Part of Speech analysis per sentence, use these results to select top k frequent words
 
@@ -114,26 +114,34 @@ baby_pos = data_frame(word=review_string[word_subset], pos=tags) %>%
 
 
 
-feature_matrix1 <- feature_matrix1 %>% rename(business_id  = V1)
+# feature_matrix1 <- feature_matrix1 %>% rename(business_id  = V1)
 
-model_data <- left_join(feature_matrix1, dat[,c('business.star', 'business_id')], by = 'business_id') %>% 
-  distinct()
+# model_data <- left_join(feature_matrix1, dat[,c('business.star', 'business_id')], by = 'business_id') %>% 
+ #  distinct()
 
 
 smp_size <- floor(0.90 * nrow(model_data))
 
 train_ind <- sample(seq_len(nrow(model_data)), size = smp_size)
 
-train <- model_data[train_ind, ]
-train$business.star <- as.factor(train$business.star)
-
-train <- train %>% select(-business_id)
-
-test <- model_data[-train_ind, ]
-test_labels <- test$business.star
-test <- test %>% select(-business_id, - business.star)
+train <- feature_matrix1[train_ind, ]
+labels <- dat %>% arrange(business_id) %>% select(business_id, business.star) %>% distinct() %>% select(business.star)
+train_labels <- labels[train_ind,]
+train <- train %>% as.matrix() %>% as.tibble() %>%  mutate(y = train_labels$business.star)
 
 
+test <-  feature_matrix1[-train_ind, ] %>% as.matrix() %>% as.tibble()
+test_labels <- labels[-train_ind,]
+
+
+
+
+require(quanteda)
+
+lr_model <- lm(y ~ ., data = train)
+pred_lr <- predict(lr_model, test, type = "response")
+
+Metrics::accuracy(test_labels, pred_lr)
 
 
 # 2 Support Vector Regression
