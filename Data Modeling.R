@@ -5,7 +5,9 @@
 require(tidytext)
 require(tidyverse)
 require(tm)
+require(readr)
 
+<<<<<<< HEAD
 # Read data into R
 
 dat = read_csv('data/final.csv')
@@ -17,6 +19,16 @@ dat <- dat %>% rename(review.count.business = review_count.x,
                       business.star = stars.x,
                       user.star = stars.y) %>% 
   select(-c(X1, X1_1, average_stars.1))
+=======
+dat = read_csv('data/dat_clean.csv')
+
+# General guidelines for all models
+
+# Split cleaned data into 90% training and 10% testing using 10 fold cross validation
+
+# train <- 
+# test <- 
+>>>>>>> a0ba2a9d90d0a3a2824b7ceaf178f0d567e873fc
 
 
 
@@ -74,15 +86,43 @@ feature_matrix1 <- feature_matrix1 %>% cast_dtm(document = business_id, term = w
 
 # 2. Only include adjectives and adverbs
 
+<<<<<<< HEAD
 text_dat <- text_dat %>% 
 left_join(parts_of_speech) %>%
   filter(pos %in% c("Adjective","Adverb")) 
 
 text_dat_top_k2 <- text_dat %>% count(word) %>% arrange(desc(n)) %>% slice(1:1000)
+=======
+# 2. Feature Engineering I; Part of Speech analysis per sentence, use these results to select top k frequent words
+
+# text in sentence
+review_sentence <- dat %>%
+  select(review_id, business_id, business.star, text) %>%
+  unnest_tokens(sentence, text, token = "sentences")
+
+# text as a whole
+review_string = unlist(dat$text) %>% 
+  paste(collapse=' ') %>% 
+  as.String
+
+# POS 
+review_pos = text_dat %>% 
+  group_by(word) %>%                                # get words
+  inner_join(parts_of_speech) %>%                   # join POS
+  count(pos) %>%                                    # count
+  mutate(prop=n/sum(n))
+
+text_adj <-review_pos[c(review_pos$pos=='Adjective'),]
+text_adv <-review_pos[c(review_pos$pos=='Adverb'),]
+
+install.packages("openNLPmodels.en", repos = "http://datacube.wu.ac.at/", type = "source")
+install.packages("opneNLP")
+>>>>>>> a0ba2a9d90d0a3a2824b7ceaf178f0d567e873fc
 
 # Most common words by business id 
 business_words2 <- text_dat %>% count(word, business_id, sort = T)
 
+<<<<<<< HEAD
 # Top Word Occurence by Restaurant and Total
 # group business_words by business id and create column for total # of words in each business_id
 total_words2 <- business_words2 %>% 
@@ -90,6 +130,10 @@ total_words2 <- business_words2 %>%
   summarize(total = sum(n))
 
 business_words2 <- left_join(business_words2, total_words2)
+=======
+init_s_w = annotate(review_string, list(Maxent_Sent_Token_Annotator(),
+                                        Maxent_Word_Token_Annotator()))
+>>>>>>> a0ba2a9d90d0a3a2824b7ceaf178f0d567e873fc
 
 # filter business_words to only keep words that belong to top k 
 business_words2 <-  business_words2 %>% filter(word %in% text_dat_top_k2$word) %>% arrange(business_id)
