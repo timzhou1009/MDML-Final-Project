@@ -76,9 +76,23 @@ feature_matrix1 <- feature_matrix1 %>% cast_dtm(document = business_id, term = w
 # feature_matrix1 <- as_tibble(cbind(unique(business_words$business_id),feature_matrix1))
 
 # 2. Feature Engineering I; Part of Speech analysis per sentence, use these results to select top k frequent words
+
+# text in sentence
 review_sentence <- dat %>%
   select(review_id, business_id, business.star, text) %>%
   unnest_tokens(sentence, text, token = "sentences")
+
+# text as a whole
+review_string = unlist(dat$text) %>% 
+  paste(collapse=' ') %>% 
+  as.String
+
+# POS 
+review_pos = text_dat %>% 
+  group_by(word) %>%                                # get words
+  inner_join(parts_of_speech) %>%                   # join POS
+  count(pos) %>%                                    # count
+  mutate(prop=n/sum(n))
 
 install.packages("openNLPmodels.en", repos = "http://datacube.wu.ac.at/", type = "source")
 install.packages("opneNLP")
@@ -87,10 +101,6 @@ library(NLP)
 library(tm)  # make sure to load this prior to openNLP
 library(openNLP)
 library(openNLPmodels.en)
-
-review_string = unlist(dat$text) %>% 
-  paste(collapse=' ') %>% 
-  as.String
 
 init_s_w = annotate(review_string, list(Maxent_Sent_Token_Annotator(),
                                         Maxent_Word_Token_Annotator()))
