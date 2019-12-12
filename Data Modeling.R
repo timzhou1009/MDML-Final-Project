@@ -5,14 +5,10 @@
 require(tidytext)
 require(tidyverse)
 require(tm)
+require(readr)
 
-dat = read_csv('data/final.csv')
+dat = read_csv('data/dat_clean.csv')
 
-dat <- dat %>% rename(review.count.business = review_count.x,
-                      review.count.user = review_count.y,
-                      business.star = stars.x,
-                      user.star = stars.y) %>% 
-  select(-c(X1, X1_1, average_stars.1))
 # General guidelines for all models
 
 # Split cleaned data into 90% training and 10% testing using 10 fold cross validation
@@ -93,6 +89,9 @@ review_pos = text_dat %>%
   inner_join(parts_of_speech) %>%                   # join POS
   count(pos) %>%                                    # count
   mutate(prop=n/sum(n))
+
+text_adj <-review_pos[c(review_pos$pos=='Adjective'),]
+text_adv <-review_pos[c(review_pos$pos=='Adverb'),]
 
 install.packages("openNLPmodels.en", repos = "http://datacube.wu.ac.at/", type = "source")
 install.packages("opneNLP")
