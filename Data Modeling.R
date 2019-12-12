@@ -100,14 +100,7 @@ library(tm)  # make sure to load this prior to openNLP
 library(openNLP)
 library(openNLPmodels.en)
 
-<<<<<<< HEAD
-# Models - 
-  
-# 1 Linear Regression
-=======
-baby_string0 = barth0 %>% 
-  filter(id=='baby.txt')
->>>>>>> d1ce632d7503f332d3d97b5b76f0de54dbed13a6
+
 
 review_string = unlist(dat$text) %>% 
   paste(collapse=' ') %>% 
@@ -130,11 +123,7 @@ baby_pos = data_frame(word=review_string[word_subset], pos=tags) %>%
 
 # 1 Linear Regression
 
-dat <- dat %>% rename(review.count.business = review_count.x,
-                      review.count.user = review_count.y,
-                      business.star = stars.x,
-                      user.star = stars.y) %>% 
-  select(-c(X1, X1_1, average_stars.1))
+
 
 feature_matrix1 <- feature_matrix1 %>% rename(business_id  = V1)
 
@@ -147,19 +136,23 @@ smp_size <- floor(0.90 * nrow(model_data))
 train_ind <- sample(seq_len(nrow(model_data)), size = smp_size)
 
 train <- model_data[train_ind, ]
+train$business.star <- as.factor(train$business.star)
+
 train <- train %>% select(-business_id)
 
 test <- model_data[-train_ind, ]
+test_labels <- test$business.star
 test <- test %>% select(-business_id, - business.star)
 
-mod_lr <- lm(business.star ~ ., data = train)
-pred_lr <- predict(mod_lr, test)
+
 
 
 # 2 Support Vector Regression
+
+
+
 # 3 Support Vector Regression with normalized features
 # 4 Decision Tree Regression
-
 
 
 
