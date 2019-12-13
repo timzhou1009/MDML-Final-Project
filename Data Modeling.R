@@ -98,24 +98,44 @@ labels <- dat %>% filter(business_id %in% business_words$business_id) %>%
 
 train_labels <- labels[train_ind,]
 train <- train %>% as.matrix() %>% as.tibble() 
+train_ <- train %>% mutate(y = train_labels$business.star)
 
 test <-  feature_matrix1[-train_ind, ] %>% as.matrix() %>% as.tibble()
 test_labels <- labels[-train_ind,]
 
-# Run svm model using caret package
+# logistic model
 
-model <- svm(train, train_labels)
-pred <-  predict(model, test)
-pred <- round(pred*2)/2
+model_log <- nnet::multinom(y ~. , data = train_, MaxNWts = 10000)
+pred_log <- predict(model_log, test)
+
+
+# Run svm model 
+
+model_svm <- svm(train, train_labels)
+pred_svm <-  predict(model_svm, test)
+pred_svm <- round(pred_svm*2)/2
+
+# Run svm with normalized features 
+
+model_svm_n <- svm(normalize(train), train_labels)
+pred_svm_n <- predict(model_svm_n, normalize(test))
+pred_svm_n <- round(pred_svm_n*2)/2
+
+# Run naive Bayes model
+
 
 model_nb <- e1071::naiveBayes(train, as.factor(train_labels$business.star))
 pred_nb <-  predict(model_nb, test)
 
 
+
 # test accuracy of baseline model
 
-Metrics::rmse(test_labels$business.star, pred)
+Metrics::rmse(test_labels$business.star, pred_svm)
+Metrics::rmse(test_labels$business.star, pred_svm_n)
 Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_nb)))
+Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_log)))
+
 
 
 # Support Vector Regression with  feature engineering 2
@@ -164,27 +184,42 @@ train2 <- feature_matrix2[train_ind2, ]
 labels2 <- dat %>% filter(business_id %in% business_words2$business_id) %>%  arrange(business_id) %>% select(business_id, business.star) %>% distinct() %>% select(business.star)
 train_labels2 <- labels2[train_ind2,]
 train2 <- train2 %>% as.matrix() %>% as.tibble() 
+train2_ <- train2 %>% mutate(y = train_labels2$business.star)
 
 test2 <-  feature_matrix2[-train_ind2, ] %>% as.matrix() %>% as.tibble()
 test_labels2 <- labels2[-train_ind2,]
 
-# svm model 
+# logistic model
+
+model_log2 <- nnet::multinom(y ~. , data = train2_, MaxNWts = 10000)
+pred_log2 <- predict(model_log2, test2)
 
 
-model2 <- svm(train2, train_labels2)
-pred2 <-  predict(model2, test2)
-pred2 <- round(pred2*2)/2
+# Run svm model 
 
-# naive bayes model
+model_svm2 <- svm(train2, train_labels2)
+pred_svm2 <-  predict(model_svm2, test2)
+pred_svm2 <- round(pred_svm2*2)/2
+
+# Run svm with normalized features 
+
+model_svm_n2 <- svm(normalize(train2), train_labels2)
+pred_svm_n2 <- predict(model_svm_n2, normalize(test2))
+pred_svm_n2 <- round(pred_svm_n2*2)/2
+
+# Run naive Bayes model
+
 
 model_nb2 <- e1071::naiveBayes(train2, as.factor(train_labels2$business.star))
-pred_nb2 <-  predict(model_nb2, test)
+pred_nb2 <-  predict(model_nb2, test2)
 
 
 
+# test accuracy 
 
-# accuracy
+Metrics::rmse(test_labels2$business.star, pred_svm2)
+Metrics::rmse(test_labels2$business.star, pred_svm_n2)
+Metrics::rmse(test_labels2$business.star, as.numeric(as.vector(pred_nb2)))
+Metrics::rmse(test_labels2$business.star, as.numeric(as.vector(pred_log2)))
 
-Metrics::rmse(test_labels2$business.star, pred2)
-Metrics::rmse(test_labels2$business.star, pred_nb2)
 
