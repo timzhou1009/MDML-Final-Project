@@ -6,7 +6,10 @@
 require(tidytext)
 require(tidyverse)
 require(tm)
-library(e1071)
+require(e1071)
+require(Metrics)
+require(nnet)
+require(BBmisc)
 
 # set seed
 set.seed(1234)
@@ -122,11 +125,10 @@ pred_svm_n <- predict(model_svm_n, normalize(test))
 
 
 # Run naive Bayes model
-
-
 model_nb <- e1071::naiveBayes(train, as.factor(train_labels$business.star))
 pred_nb <-  predict(model_nb, test)
 
+<<<<<<< HEAD
 
 
 # test accuracy of baseline model
@@ -135,8 +137,15 @@ rmse_svm <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_
 rmse_svm_n <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_svm_n)))
 rmse_nb <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_nb)))
 rmse_log <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_log)))
+=======
+# Test accuracy of baseline model
+Metrics::rmse(test_labels$business.star, pred_svm)
+Metrics::rmse(test_labels$business.star, pred_svm_n)
+Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_nb)))
+Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_log)))
+>>>>>>> 332a60465335f6fff04db46614b756914fab1bd9
 
-
+# RMSE for 4 Models
 
 # Support Vector Regression with  feature engineering 2
 
