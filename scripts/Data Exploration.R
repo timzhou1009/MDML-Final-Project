@@ -114,11 +114,7 @@ build_word_cloud("lower")
 # Word Cloud for Reviews of Restaurants with an average Rating of above 3.5
 build_word_cloud("higher")
 
-# https://rpubs.com/shreyaghelani/234363
 
-
-### An Analysis on the Effect of Price Perception on User Ratings
-# https://rpubs.com/mjfii/value-bias-analysis
 ### Tidy Sentiment Analysis
 
 # Creating one-row-per-term-per-document
@@ -134,8 +130,8 @@ review_sentiment = review_words %>%
   summarize(sentiment = mean(value))
 
 sent_score = ggplot(review_sentiment, aes(business.star, sentiment, group = business.star)) +
-  geom_boxplot() + ylab("Average Sentiment Score") + xlab("Restaurant Star Rating")
-
+  geom_boxplot() + ylab("Average Sentiment Score") + xlab("Restaurant Star Rating") + ggtitle('Sentiment Score Vs. Rating') + theme(plot.title = element_text(size = 10, face = "bold"))
+sent_score
 # Confirms that the higher the store, more positive the words used in sentiment analysis.
 
 ### Which Words are Positive or Negative?
@@ -207,21 +203,12 @@ plot3 = ggplot(words_afinn, aes(reviews, average_stars, color = value)) +
 
 plot3
 
-### Sentiment Analysis
 
-review_sentence <- dat %>%
-  select(review_id, business_id, business.star, text) %>%
-  unnest_tokens(sentence, text, token = "sentences")
 
-# text as a whole
-review_string = unlist(dat$text) %>% 
-  paste(collapse=' ') %>% 
-  as.String
 
-sentiment()
 
-# https://github.com/mjfii/Yelp-Value-Bias-Analysis
-# https://github.com/Yelp-Kaggle/Yelp
-#https://nativeatom.github.io/document/Yelp.pdf
-# https://github.com/AmiGandhi/Yelp-User-Rating-Prediction-using-NLP-and-Naive-Bayes-algorithm-and-Restaurant-Recommender
+
+
+
+
 
