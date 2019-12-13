@@ -4,9 +4,19 @@
 Messy Data and Machine Learning Final Project Fall 2019
 
 ## Code File Structure:
-`Data Cleaning.R` contains code used for reading in large files and initial cleaning
-`Data Exploration.R`contains code used for exploratory and sentiment analysis
-`Data Modelling.R` contains code used for modeling, calculating RMSE, and bias
+`Scripts` contains code used in this project
+
+  `Data Cleaning.R` contains code used for reading in large files and initial cleaning
+
+  `Data Exploration.R`contains code used for exploratory and sentiment analysis
+
+  `Data Modelling.R` contains code used for modeling, calculating RMSE, and bias
+
+`Data` contains data used in this project
+
+`Paper` contains the final write up with methods and results used for this project
+
+`Figures` contains images and statistical graphs produced
 
 
 Predict Bias for Yelp Businesses from review text using NLP
