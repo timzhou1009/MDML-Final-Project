@@ -14,6 +14,7 @@ require(leaflet)        #This package is used for plotting maps
 require(wordcloud)      #This package is used to generate word clouds
 require(tm)             #This is a text mining package used in the process of generating word clouds
 require(mapview)
+require(sentimentr)
 
 ### Reading in Final Joined CSV
 dat = read_csv('data/final.csv')
@@ -26,14 +27,6 @@ dat <- dat %>% rename(review.count.business = review_count.x,
 
 write_csv(dat, 'data/dat_clean.csv')
 
-# Inspecting NAs
-
-# NA_values <- is.na(dat)
-# NA_Count <- apply(NA_values,2,sum)
-# NA_Count_df <- NA_Count[NA_Count==dim(dat)[1]]
-
-#The following columns are irrelevant for restaurants and are completely empty
-# names(NA_Count_df)
 colMeans(is.na(dat)) 
 
 ### Where are Top 10 Cities in this Data?
@@ -70,7 +63,26 @@ Ngrams <- function(x) NGramTokenizer(x, Weka_control(min = 1, max = 3))
 tdm <- TermDocumentMatrix(docs, control = list(tokenize = Ngrams))
 freq = sort(rowSums(as.matrix(tdm)),decreasing = TRUE)
 freq.df = data.frame(word=names(freq), freq=freq)
-head(freq.df,25) # Top 25 categories
+head(freq.df,25) # Top 25 categories of top rated restaurants
+
+
+### Top categories of Low-Rated Restaurants
+low_rated_categories <- dat %>% filter(business.star> 3.5) %>% select(name,categories) %>% distinct()
+low_rated_categories[complete.cases(low_rated_categories),]
+docs <- Corpus(VectorSource(low_rated_categories$categories)) 
+
+#Converting to lower case, removing stopwords, punctuation and numbers
+docs <- tm_map(docs, removePunctuation)    
+docs <- tm_map(docs, tolower)   
+docs <- tm_map(docs, removeWords, c(stopwords("english"),"s","ve"))  
+
+
+#Term Document Matrix
+Ngrams <- function(x) NGramTokenizer(x, Weka_control(min = 1, max = 3))
+tdm <- TermDocumentMatrix(docs, control = list(tokenize = Ngrams))
+freq = sort(rowSums(as.matrix(tdm)),decreasing = TRUE)
+freq.df = data.frame(word=names(freq), freq=freq)
+head(freq.df,25) # Top 25 categories of low rated restaurants
 
 ### Word Cloud for Word Frequency in Review Text
 build_word_cloud <- function(range)
@@ -195,6 +207,18 @@ plot3 = ggplot(words_afinn, aes(reviews, average_stars, color = value)) +
 
 plot3
 
+### Sentiment Analysis
+
+review_sentence <- dat %>%
+  select(review_id, business_id, business.star, text) %>%
+  unnest_tokens(sentence, text, token = "sentences")
+
+# text as a whole
+review_string = unlist(dat$text) %>% 
+  paste(collapse=' ') %>% 
+  as.String
+
+sentiment()
 
 # https://github.com/mjfii/Yelp-Value-Bias-Analysis
 # https://github.com/Yelp-Kaggle/Yelp
