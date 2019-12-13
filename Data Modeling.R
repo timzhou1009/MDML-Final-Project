@@ -6,10 +6,9 @@
 require(tidytext)
 require(tidyverse)
 require(tm)
-require(e1071)
-require(Metrics)
-require(nnet)
+library(e1071)
 require(BBmisc)
+
 
 # set seed
 set.seed(1234)
@@ -125,10 +124,11 @@ pred_svm_n <- predict(model_svm_n, normalize(test))
 
 
 # Run naive Bayes model
+
+
 model_nb <- e1071::naiveBayes(train, as.factor(train_labels$business.star))
 pred_nb <-  predict(model_nb, test)
 
-<<<<<<< HEAD
 
 
 # test accuracy of baseline model
@@ -137,15 +137,8 @@ rmse_svm <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_
 rmse_svm_n <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_svm_n)))
 rmse_nb <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_nb)))
 rmse_log <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_log)))
-=======
-# Test accuracy of baseline model
-Metrics::rmse(test_labels$business.star, pred_svm)
-Metrics::rmse(test_labels$business.star, pred_svm_n)
-Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_nb)))
-Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_log)))
->>>>>>> 332a60465335f6fff04db46614b756914fab1bd9
 
-# RMSE for 4 Models
+
 
 # Support Vector Regression with  feature engineering 2
 
@@ -233,12 +226,12 @@ rmse_log2 <- Metrics::rmse(test_labels2$business.star, as.numeric(as.vector(pred
 
 
 rmse_plot <- c(rmse_svm, rmse_svm_n, rmse_log, rmse_nb, 
-                    rmse_svm2, rmse_svm_n2, rmse_log2, rmse_nb2)
+               rmse_svm2, rmse_svm_n2, rmse_log2, rmse_nb2)
 
 rmse_plot = as.data.frame(rmse_plot)
 
-rmse_plot <- rmse_plot %>% mutate(id = c("SVM", "SVM - norm", "NB", "Multinom-log",
-                                         "SVM", "SVM - norm", "NB", "Multinom-log"),
+rmse_plot <- rmse_plot %>% mutate(id = c("SVM", "SVM - norm", "Multinom-log", "NB",
+                                         "SVM", "SVM - norm", "Multinom-log", "NB"),
                                   Feature = c(rep("Top k words", 4), rep("Top k adjectives", 4)))
 
 p <- ggplot(data = rmse_plot, aes (x = id, y = rmse_plot, fill = Feature) ) + 
@@ -248,19 +241,31 @@ p <- ggplot(data = rmse_plot, aes (x = id, y = rmse_plot, fill = Feature) ) +
 ggsave("figures/rmse_plot.png")
 
 
-# Calculating bias for the model with the lowest rmse and highest rmse
+
+# Calculating bias for the model with the lowest rmse and highest rmse models
 
 pred_best_mod <- predict(model_log2, as.tibble(as.matrix(feature_matrix2)))
 
-bias_best_mod <- sum(labels2 - as.numeric(pred_best_mod))/length(pred_best_mod)
+bias_best_mod <- sum(labels2$business.star - as.numeric(pred_best_mod))/length(pred_best_mod)
 
 pred_worst_mod <- predict(model_nb2, as.tibble(as.matrix(feature_matrix2)))
 
-bias_worst_mod <- sum(labels2 - as.numeric(pred_worst_mod))/length(pred_worst_mod)
+bias_worst_mod <- sum(labels2$business.star - as.numeric(pred_worst_mod))/length(pred_worst_mod)
 
 
+plot_bias <- c((labels2$business.star - as.numeric(pred_best_mod)),
+ (labels2$business.star - as.numeric(pred_worst_mod)))
+
+plot_bias <- plot_bias %>% as.tibble() %>% 
+  mutate(mod = c(rep('Multinom-log', 855), rep('Naive Bayes', 855)),
+         r = c(seq(1:855), seq(1:855)))
 
 
+p2 <- ggplot(data = plot_bias, aes(x = r, y = value, fill = mod)) + 
+  geom_bar(stat = "identity", position = "dodge") + xlab('Restaurant Index') + ylab('Actual - Predicted')
+
+
+ggsave('figures/bias_plot.png')
 
 
 
