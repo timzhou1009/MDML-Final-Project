@@ -134,7 +134,7 @@ Metrics::rmse(test_labels$business.star, pred_svm_n)
 Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_nb)))
 Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_log)))
 
-
+# RMSE for 4 Models
 
 # Support Vector Regression with  feature engineering 2
 
