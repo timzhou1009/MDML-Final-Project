@@ -207,21 +207,41 @@ plot3 = ggplot(words_afinn, aes(reviews, average_stars, color = value)) +
 
 plot3
 
-### Sentiment Analysis
+### Sentiment Analysis II
+# Polarity score value between -1 and 1 in the following transformation: ((1 - (1/(1 + exp(polarity)))) * 2) - 1
 
-review_sentence <- dat %>%
-  select(review_id, business_id, business.star, text) %>%
-  unnest_tokens(sentence, text, token = "sentences")
+dat$text <- as.character(dat$text)
+sent_score = sentiment_by(dat$text)
 
-# text as a whole
-review_string = unlist(dat$text) %>% 
-  paste(collapse=' ') %>% 
-  as.String
+sent_score = cbind(sent_score,dat[,c('business_id', 'business.star')])
+sent_score = sent_score %>% group_by(business_id) %>% mutate(reviews = n())
+sent_score_bus = sent_score  %>%  
+  group_by(business_id) %>% 
+  summary(sentiment = mean(ave_sentiment))
 
-sentiment()
+sent_score_bus = merge(sent_score_bus, sent_score[,c('business_id', 'business.star', 'reviews')], by = 'business_id', all.x = T)
 
-# https://github.com/mjfii/Yelp-Value-Bias-Analysis
-# https://github.com/Yelp-Kaggle/Yelp
-#https://nativeatom.github.io/document/Yelp.pdf
-# https://github.com/AmiGandhi/Yelp-User-Rating-Prediction-using-NLP-and-Naive-Bayes-algorithm-and-Restaurant-Recommender
+
+# Gives sentiment/polarity score averaged by 858 businesses
+
+plot4 = ggplot(sent_score_bus, aes(reviews, average_stars, color = sentiment)) +
+  geom_point(size = 0.05) +
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1, hjust = 1,size=2) +
+  scale_x_log10() +
+  xlab("Number of Reviews") +
+  ylab("Average Yelp Business Stars") +
+  ggtitle('Word Frequency vs Average Stars') +
+  theme(plot.title = element_text(size = 10, face = "bold")) +
+  xlim(100, 5000)
+
+plot4
+
+# lm(stars~ave.polarity)
+
+
+
+
+
+
+
 
