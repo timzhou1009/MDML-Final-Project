@@ -9,7 +9,7 @@ require(tm)
 library(e1071)
 
 # set seed
-set.seed(2048)
+set.seed(1234)
 
 # Read data into R
 
@@ -111,15 +111,15 @@ pred_log <- predict(model_log, test)
 
 # Run svm model 
 
-model_svm <- svm(train, train_labels)
+model_svm <- svm(train, as.factor(train_labels$business.star), type = "C")
 pred_svm <-  predict(model_svm, test)
-pred_svm <- round(pred_svm*2)/2
+
 
 # Run svm with normalized features 
 
-model_svm_n <- svm(normalize(train), train_labels)
+model_svm_n <- svm(normalize(train), as.factor(train_labels$business.star), type = "C")
 pred_svm_n <- predict(model_svm_n, normalize(test))
-pred_svm_n <- round(pred_svm_n*2)/2
+
 
 # Run naive Bayes model
 
@@ -131,10 +131,10 @@ pred_nb <-  predict(model_nb, test)
 
 # test accuracy of baseline model
 
-Metrics::rmse(test_labels$business.star, pred_svm)
-Metrics::rmse(test_labels$business.star, pred_svm_n)
-Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_nb)))
-Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_log)))
+rmse_svm <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_svm)))
+rmse_svm_n <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_svm_n)))
+rmse_nb <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_nb)))
+rmse_log <-  Metrics::rmse(test_labels$business.star, as.numeric(as.vector(pred_log)))
 
 
 
@@ -197,15 +197,15 @@ pred_log2 <- predict(model_log2, test2)
 
 # Run svm model 
 
-model_svm2 <- svm(train2, train_labels2)
+model_svm2 <- svm(train2, as.factor(train_labels2$business.star), type = "C")
 pred_svm2 <-  predict(model_svm2, test2)
-pred_svm2 <- round(pred_svm2*2)/2
+
 
 # Run svm with normalized features 
 
-model_svm_n2 <- svm(normalize(train2), train_labels2)
+model_svm_n2 <- svm(normalize(train2), as.factor(train_labels2$business.star), type = "C")
 pred_svm_n2 <- predict(model_svm_n2, normalize(test2))
-pred_svm_n2 <- round(pred_svm_n2*2)/2
+
 
 # Run naive Bayes model
 
@@ -217,9 +217,45 @@ pred_nb2 <-  predict(model_nb2, test2)
 
 # test accuracy 
 
-Metrics::rmse(test_labels2$business.star, pred_svm2)
-Metrics::rmse(test_labels2$business.star, pred_svm_n2)
-Metrics::rmse(test_labels2$business.star, as.numeric(as.vector(pred_nb2)))
-Metrics::rmse(test_labels2$business.star, as.numeric(as.vector(pred_log2)))
+rmse_svm2 <- Metrics::rmse(test_labels2$business.star, as.numeric(as.vector(pred_svm2)))
+rmse_svm_n2 <-  Metrics::rmse(test_labels2$business.star, as.numeric(as.vector(pred_svm_n2)))
+rmse_nb2 <- Metrics::rmse(test_labels2$business.star, as.numeric(as.vector(pred_nb2)))
+rmse_log2 <- Metrics::rmse(test_labels2$business.star, as.numeric(as.vector(pred_log2)))
+
+
+rmse_plot <- c(rmse_svm, rmse_svm_n, rmse_log, rmse_nb, 
+                    rmse_svm2, rmse_svm_n2, rmse_log2, rmse_nb2)
+
+rmse_plot = as.data.frame(rmse_plot)
+
+rmse_plot <- rmse_plot %>% mutate(id = c("SVM", "SVM - norm", "NB", "Multinom-log",
+                                         "SVM", "SVM - norm", "NB", "Multinom-log"),
+                                  Feature = c(rep("Top k words", 4), rep("Top k adjectives", 4)))
+
+p <- ggplot(data = rmse_plot, aes (x = id, y = rmse_plot, fill = Feature) ) + 
+  geom_bar(stat = "identity", position = "dodge") + ylab("RMSE") + xlab("Classifier")
+
+
+ggsave("figures/rmse_plot.png")
+
+
+# Calculating bias for the model with the lowest rmse and highest rmse
+
+pred_best_mod <- predict(model_log2, as.tibble(as.matrix(feature_matrix2)))
+
+bias_best_mod <- sum(labels2 - as.numeric(pred_best_mod))/length(pred_best_mod)
+
+pred_worst_mod <- predict(model_nb2, as.tibble(as.matrix(feature_matrix2)))
+
+bias_worst_mod <- sum(labels2 - as.numeric(pred_worst_mod))/length(pred_worst_mod)
+
+
+
+
+
+
+
+
+
 
 
