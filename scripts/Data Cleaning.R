@@ -1,6 +1,6 @@
-# Christina Ho, Tim Chou, Ria Pinjani #####
-########### Data Exploration ##############
-###########################################
+##### Christina Ho, Tim Chou, Ria Pinjani #####
+############# Data Exploration ################
+###############################################
 
 #Install required packages 
 # install.packages('jsonlite')
@@ -8,7 +8,7 @@ require(jsonlite)
 require(lubridate)
 
 
-# user = stream_in(file('data/user.json')) 
+#user = stream_in(file('data/user.json')) 
 user = data.frame(user)
 
 # review = stream_in(file('data/review.json')) 
@@ -30,9 +30,9 @@ restaurant_data = restaurant[samp,]
 write_csv(restaurant_data,'data/restaurant_data.csv')
 
 # Read in the saved csv file
-restaurant_data = read_csv('data/restaurant_data.csv')
+restaurant_data = read.csv('data/restaurant_data.csv')
 
-# Select rows from the dataset reviews for which business id 
+# Select rows from the reviews datasetfor which business id 
 # matches those in restaraunt_data
 id = unique(restaurant_data$business_id)
 review_chosen <- review[review$business_id %in% id,]
